@@ -1,6 +1,10 @@
-<<<<<<< HEAD
-print("hello")
-print("hello world")
-=======
-print("hello")
->>>>>>> 269863492492a76c7064b251dccf644847a602c3
+from transformers import pipeline
+
+pipe = pipeline("text-classification", model="hun3359/klue-bert-base-sentiment")
+
+print("오늘의 기분은?: ")
+text = str(input())
+
+result = pipe(text)
+
+print(result)
