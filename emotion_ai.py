@@ -16,3 +16,6 @@ df.to_csv("data/sample.csv", index=False, encoding="utf-8 sig")
 
 
 print("csv 파일 저장")
+
+df_csv = pd.read_csv("data/sample.csv")
+print(df_csv)
