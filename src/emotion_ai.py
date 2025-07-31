@@ -1,10 +1,14 @@
 from transformers import pipeline
 import json
 import pandas as pd
+import os
 
+## 현재 파일 위치 기준으로 한 단계 위 폴더에 있는 data/sample_diary.json 경로를 만드는 코드
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+data_path = os.path.join(BASE_DIR, "data", "sample_diary.json")
 
 ## json 파일열어서 읽기 
-with open("data/sample_diary.json", "r", encoding="UTF-8")as f:
+with open(data_path, "r", encoding="UTF-8")as f:
     diary_data = json.load(f)
     
     
