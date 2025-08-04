@@ -7,9 +7,15 @@ import os
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_path = os.path.join(BASE_DIR, "data", "sample_diary.json")
 
-## json 파일열어서 읽기 
-with open(data_path, "r", encoding="UTF-8")as f:
-    diary_data = json.load(f)
+try:
+    ## json 파일열어서 읽기 
+    with open(data_path, "r", encoding="UTF-8")as f:
+        diary_data = json.load(f)
+        
+except FileNotFoundError:
+    print("파일이 존재 하지 않습니다")
+except json.JSONDecodeError:
+    print("형식이 잘못되었습니다")
     
     
 ## pipeline으로 모델 불러오기
