@@ -2,11 +2,25 @@ from transformers import pipeline
 import json
 import pandas as pd
 import os
+from openai import OpenAI
+from dotenv import load_dotenv
+
+## openai api
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+response = client.chat.completions.create(
+    model= "gpt-4o-mini",
+    messages=[{"role":"user","content":"오늘 하루가 힘들었어"}]
+)
+print(response.choices[0].message.content)
 
 ## 현재 파일 위치 기준으로 한 단계 위 폴더에 있는 data/sample_diary.json 경로를 만드는 코드
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_path = os.path.join(BASE_DIR, "data", "sample_diary.json")
+csv_path = os.path.join(BASE_DIR, "data", "sample.csv")
 
+## 예외처리
 try:
     ## json 파일열어서 읽기 
     with open(data_path, "r", encoding="UTF-8")as f:
@@ -28,11 +42,11 @@ for diary in diary_data:
     
 ## csv파일로 변환 및 저장
 df = pd.DataFrame(diary_data)
-df.to_csv("data/sample.csv", index=False, encoding="utf-8-sig")
+df.to_csv(csv_path, index=False, encoding="utf-8-sig")
 
 
 print("csv 파일 저장")
 
 ## csv 출력하기
-df_csv = pd.read_csv("data/sample.csv")
+df_csv = pd.read_csv(csv_path)
 print(df_csv)
