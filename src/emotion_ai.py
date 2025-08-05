@@ -5,16 +5,6 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 
-## openai api
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-response = client.chat.completions.create(
-    model= "gpt-4o-mini",
-    messages=[{"role":"user","content":"오늘 하루가 힘들었어"}]
-)
-print(response.choices[0].message.content)
-
 ## 현재 파일 위치 기준으로 한 단계 위 폴더에 있는 data/sample_diary.json 경로를 만드는 코드
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_path = os.path.join(BASE_DIR, "data", "sample_diary.json")
@@ -41,12 +31,26 @@ for diary in diary_data:
     diary["label"] = result["label"]
     
 ## csv파일로 변환 및 저장
-df = pd.DataFrame(diary_data)
-df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+# df = pd.DataFrame(diary_data)
+# df.to_csv(csv_path, index=False, encoding="utf-8-sig")
 
 
-print("csv 파일 저장")
+# print("csv 파일 저장")
 
-## csv 출력하기
-df_csv = pd.read_csv(csv_path)
-print(df_csv)
+## csv
+df = pd.read_csv(csv_path, encoding="utf-8-sig")
+
+one_day_text = df["text"].iloc[-1]
+print("오늘의 일기:", one_day_text)
+
+## openai api
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+prompt = f"오늘 일기를 한 문장으로 요약해줘:\n{one_day_text}"
+
+response = client.chat.completions.create(
+    model= "gpt-4o-mini",
+    messages=[{"role":"user","content":prompt}]
+)
+print(response.choices[0].message.content)
