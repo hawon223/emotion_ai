@@ -31,8 +31,8 @@ for diary in diary_data:
     diary["label"] = result["label"]
     
 ## csv파일로 변환 및 저장
-# df = pd.DataFrame(diary_data)
-# df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+df = pd.DataFrame(diary_data)
+df.to_csv(csv_path, index=False, encoding="utf-8-sig")
 
 
 # print("csv 파일 저장")
@@ -49,7 +49,10 @@ print("오늘의 일기:", one_day_text)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-prompt = f"""오늘 일기를 한 문장으로 요약하고, 공감 답변 만들어줘.
+prompt = f"""오늘 일기를 한 문장으로 요약하고 감정에 맞는 톤으로 공감해줘.
+- 기쁘거나 행복한 내용 → 함께 기뻐하며 축하
+- 슬프거나 힘든 내용 → 따뜻하게 위로
+- 평범한 내용 → 가볍게 공감
 일기:\n{one_day_text}
 
 요약:
