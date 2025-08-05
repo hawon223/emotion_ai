@@ -37,18 +37,26 @@ for diary in diary_data:
 
 # print("csv 파일 저장")
 
-## csv
-df = pd.read_csv(csv_path, encoding="utf-8-sig")
-
-one_day_text = df["text"].iloc[-1]
-print("오늘의 일기:", one_day_text)
 
 ## openai api
 load_dotenv()
+
+## csv 불러오기
+df = pd.read_csv(csv_path, encoding="utf-8-sig")
+## 최신 csv 가져오기
+one_day_text = df["text"].iloc[-1]
+print("오늘의 일기:", one_day_text)
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-prompt = f"오늘 일기를 한 문장으로 요약해줘:\n{one_day_text}"
+prompt = f"""오늘 일기를 한 문장으로 요약하고, 공감 답변 만들어줘.
+일기:\n{one_day_text}
 
+요약:
+공감 답변:
+"""
+
+##GPT 호출
 response = client.chat.completions.create(
     model= "gpt-4o-mini",
     messages=[{"role":"user","content":prompt}]
