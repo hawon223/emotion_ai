@@ -6,6 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
+import gradio as gr
 
 ## 현재 파일 위치 기준으로 한 단계 위 폴더에 있는 data/sample_diary.json 경로를 만드는 코드(기본경로 설정)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -188,10 +189,20 @@ rc('font', family=font_name)
 ## 시각화
 plt.figure(figsize = (10, 5))
 plt.plot(daily_score["date"], daily_score["score"], marker = 'o')
-plt.title("일별 평균 감정 점수 변화")
+plt.title("감정 점수 변화")
 plt.xlabel("날짜")
 plt.ylabel("감정 점수(0=부정, 100=긍정)")
 plt.xticks(rotation=45)
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+def greet(name, intensity):
+    return "hello" + name + "!" * int(intensity)
+
+demo = gr.Interface(
+    fn = greet,
+    inputs=["text", "slider"],
+    outputs=["text"],
+)
+demo.launch(share=True)
