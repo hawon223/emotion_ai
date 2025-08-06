@@ -44,24 +44,30 @@ load_dotenv()
 ## csv 불러오기
 df = pd.read_csv(csv_path, encoding="utf-8-sig")
 ## 최신 csv 가져오기
-one_day_text = df["text"].iloc[-1]
-print("오늘의 일기:", one_day_text)
+today = df.iloc[-1]
+print(today["date"], today["text"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-prompt = f"""오늘 일기를 한 문장으로 요약하고 감정에 맞는 톤으로 공감해줘.
-- 기쁘거나 행복한 내용 → 함께 기뻐하며 축하
-- 슬프거나 힘든 내용 → 따뜻하게 위로
-- 평범한 내용 → 가볍게 공감
-일기:\n{one_day_text}
+text = today["text"]
+## 요약
+summary_prompt = f"다음 일기를 한 문장으로 요약해줘: \n{text}"
 
-요약:
-공감 답변:
-"""
-
-##GPT 호출
-response = client.chat.completions.create(
+## GPT 호출
+summary = client.chat.completions.create(
     model= "gpt-4o-mini",
-    messages=[{"role":"user","content":prompt}]
-)
-print(response.choices[0].message.content)
+    messages=[{"role":"user","content":summary_prompt}]
+).choices[0].message.content.strip()
+
+
+## 공감
+empathy_prompt = f"사용자의 하루: {text}\n너는 따뜻하게 공감해주는 AI 친구야. 한 문장으로 공감해줘."
+
+## GPT 호출
+empathy = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages = [{"role":"user","content":empathy_prompt}]
+).choices[0].message.content.strip()
+
+print("요약: ", summary)
+print("공감: ", empathy)
