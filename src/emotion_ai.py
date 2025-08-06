@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_path = os.path.join(BASE_DIR, "data", "sample_diary.json")
 csv_path = os.path.join(BASE_DIR, "data", "sample.csv")
+json_path = os.path.join(BASE_DIR, "data", "data/week3_summary.json")
+csv_summary_path = os.path.join(BASE_DIR, "data", "data/week3_summary.csv")
 
 ## 예외처리
 try:
@@ -50,6 +52,7 @@ print(today["date"], today["text"])
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 text = today["text"]
+date = today["date"]
 ## 요약
 summary_prompt = f"다음 일기를 한 문장으로 요약해줘: \n{text}"
 
@@ -71,3 +74,30 @@ empathy = client.chat.completions.create(
 
 print("요약: ", summary)
 print("공감: ", empathy)
+
+
+
+if os.path.exists(json_path):
+    with open(json_path, 'r', encoding="utf-8") as f:
+        try:
+            summaries = json.load(f)
+        except json.JSONDecodeError:
+            summaries = []
+        
+else:
+    summaries = []
+    
+
+if not any(entry["date"] == date for entry in summaries):
+    summaries.append({
+        "date": date,
+        "summary": summary,
+        "empathy": empathy
+    })
+    
+with open(json_path, 'w', encoding="utf-8") as f:
+    json.dump(summaries, f, ensure_ascii=False, indent=2)
+    
+pd.DataFrame(summaries).to_csv(csv_summary_path, index=False, encoding="utf-8-sig")
+
+print(f"[{date}] 요약 & 공감 저장 완료")
