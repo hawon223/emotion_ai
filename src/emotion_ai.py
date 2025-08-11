@@ -87,6 +87,15 @@ emotion_scores = {
     "자신하는": 100      # 가장 긍정적
 }
 
+## CSV 로드 + 날짜 변환 + 정렬 함수
+def load_and_prepare_data():
+    if os.path.exists(csv_path) and os.stat(csv_path).st_size > 0:
+        df = pd.read_csv(csv_path, encoding="utf-8")
+        df["date"] = pd.to_datetime(df["date"])  # 날짜 컬럼 변환
+        df["score"] = pd.to_numeric(df["score"], errors='coerce')  # 숫자 변환
+        df = df.sort_values(by="date")
+        return df
+    return pd.DataFrame()
 
 def analyze_diary(text):
     ## 감정분석
@@ -115,7 +124,7 @@ def analyze_diary(text):
 
     ## 저장
     new_entry = {
-        "data": pd.Timestamp.now().strftime("%Y-%m-%d"),
+        "date": pd.Timestamp.now().strftime("%Y-%m-%d"),
         "text": text,
         "label": label,
         "score": score,
@@ -136,7 +145,59 @@ def analyze_diary(text):
 
     # CSV 저장
     df_existing.to_csv(csv_path, index=False, encoding="utf-8-sig")
+    
+    plot_emotion_distribution()
+    plot_emotion_trend()
+    
     return f"감정: {label}\n점수: {score}\n요약: {summary}\n공감: {empathy}\n(저장 완료)"
+
+# 감정 분포 시각화
+def plot_emotion_distribution():
+    df = load_and_prepare_data()
+    if df.empty:
+        return "데이터가 없습니다."
+    
+    ## 폰트 설정
+    font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
+    font_name = font_manager.FontProperties(fname=font_path).get_name()
+    rc('font', family=font_name)
+    
+    plt.figure(figsize=(10, 5))
+    df["label"].value_counts().plot(kind="bar")  # 감정별 빈도
+    plt.title("감정 분포")
+    plt.xlabel("감정")
+    plt.ylabel("빈도")
+    plt.tight_layout()
+    plt.savefig(os.path.join(BASE_DIR, "data", "emotion_distribution.png"))
+    plt.close()
+    return "감정 분포 그래프 저장 완료"
+
+
+## 날짜별 감정 점수 변화 시각화
+def plot_emotion_trend():
+    df = load_and_prepare_data()
+    if df.empty:
+        return "데이터가 없습니다"
+    
+    ## 폰트 설정
+    font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
+    font_name = font_manager.FontProperties(fname=font_path).get_name()
+    rc('font', family=font_name)
+    
+
+    ## 시각화
+    plt.figure(figsize = (10, 5))
+    plt.plot(df["date"], df["score"], marker = 'o')
+    plt.title("감정 점수 변화")
+    plt.xlabel("날짜")
+    plt.ylabel("감정 점수(0=부정, 100=긍정)")
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(BASE_DIR, "data", "emotion_trend.png"))  # 결과 저장
+    plt.close()
+    return "감정 점수 변화 그래프 저장 완료"
+
 demo = gr.Interface(
     fn=analyze_diary,
     inputs="text",
@@ -145,22 +206,3 @@ demo = gr.Interface(
     description="일기를 입력하면 감정, 점수, 요약, 공감 메시지를 보여주고 CSV로 저장합니다."
 )
 demo.launch(share=True)
-
-
-
-# ## 폰트 설정
-# font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
-# font_name = font_manager.FontProperties(fname=font_path).get_name()
-# rc('font', family=font_name)
-
-# ## 시각화
-# plt.figure(figsize = (10, 5))
-# plt.plot(daily_score["date"], daily_score["score"], marker = 'o')
-# plt.title("감정 점수 변화")
-# plt.xlabel("날짜")
-# plt.ylabel("감정 점수(0=부정, 100=긍정)")
-# plt.xticks(rotation=45)
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
-
