@@ -151,94 +151,79 @@ def analyze_diary(text):
     
     return f"감정: {label}\n점수: {score}\n요약: {summary}\n공감: {empathy}\n(저장 완료)"
 
-# 감정 분포 시각화
 def plot_emotion_distribution():
     df = load_and_prepare_data()
     if df.empty:
-        return "데이터가 없습니다."
+        return None
     
-    ## 폰트 설정
     font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
     font_name = font_manager.FontProperties(fname=font_path).get_name()
     rc('font', family=font_name)
-    
+
     plt.figure(figsize=(10, 5))
-    df["label"].value_counts().plot(kind="bar")  # 감정별 빈도
+    df["label"].value_counts().plot(kind="bar")
     plt.title("감정 분포")
     plt.xlabel("감정")
     plt.ylabel("빈도")
     plt.tight_layout()
-    plt.savefig(os.path.join(BASE_DIR, "data", "emotion_distribution.png"))
+    img_path = os.path.join(BASE_DIR, "data", "emotion_distribution.png")
+    plt.savefig(img_path)
     plt.close()
-    return "감정 분포 그래프 저장 완료"
 
+    return img_path  # 이미지 파일 경로 반환
 
-## 날짜별 감정 점수 변화 시각화
 def plot_emotion_trend():
     df = load_and_prepare_data()
     if df.empty:
-        return "데이터가 없습니다"
+        return None
     
-    ## 폰트 설정
     font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
     font_name = font_manager.FontProperties(fname=font_path).get_name()
     rc('font', family=font_name)
-    
 
-    ## 시각화
-    plt.figure(figsize = (10, 5))
-    plt.plot(df["date"], df["score"], marker = 'o')
+    plt.figure(figsize=(10, 5))
+    plt.plot(df["date"], df["score"], marker='o')
     plt.title("감정 점수 변화")
     plt.xlabel("날짜")
     plt.ylabel("감정 점수(0=부정, 100=긍정)")
     plt.xticks(rotation=45)
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(os.path.join(BASE_DIR, "data", "emotion_trend.png"))  # 결과 저장
+    img_path = os.path.join(BASE_DIR, "data", "emotion_trend.png")
+    plt.savefig(img_path)
     plt.close()
-    return "감정 점수 변화 그래프 저장 완료"
 
-## 주간 감정 통계 계산
-def weekly_emotion_stats():
+    return img_path  # 이미지 파일 경로 반환
+
+def show_distribution():
     df = load_and_prepare_data()
     if df.empty:
-        return "데이터가 없습니다."
-    df["week"] = df["date"].dt.strftime("%Y-%U")
+        return None
+    return plot_emotion_distribution()  # 이미지 경로 반환
 
-    ## 주차 칼럼 추가
-    weekly_counts = (
-        df.groupby(["week", "label"])
-        .size()
-        .reset_index(name = "count")
-    )
-    
-    ## 주간 최다 감정
-    weekly_top_emotion = (
-        weekly_counts.sort_values(["week", "count"], ascending=[True, False])
-        .groupby("week")
-        .first()
-        .reset_index()
-        .rename(columns={"label":"top_emotion"})
-    )
-    
-    ## 주간 평균 점수
-    weekly_avg_score = (
-        df.groupby("week")["score"]
-        .mean()
-        .reset_index()
-        .rename(columns={"score": "avg_score"})
-    )
-    
-    weekly_stats = pd.merge(weekly_top_emotion, weekly_avg_score, on = "week")
-    
-    print(weekly_stats)
-    return weekly_stats
+def show_trend():
+    df = load_and_prepare_data()
+    if df.empty:
+        return None
+    return plot_emotion_trend()  # 이미지 경로 반환
 
-demo = gr.Interface(
-    fn=analyze_diary,
-    inputs="text",
-    outputs="text",
-    title="감정일기 분석",
-    description="일기를 입력하면 감정, 점수, 요약, 공감 메시지를 보여주고 CSV로 저장합니다."
-)
+
+
+with gr.Blocks() as demo:
+    gr.Markdown("# 감정일기 분석 및 시각화")
+
+    diary_input = gr.Textbox(label="오늘의 일기")
+    analyze_btn = gr.Button("일기 분석 및 저장")
+    analyze_output = gr.Textbox(label="분석 결과")
+
+    dist_btn = gr.Button("감정 분포 그래프 보기")
+    dist_img = gr.Image(label="감정 분포")
+
+    trend_btn = gr.Button("감정 점수 추이 그래프 보기")
+    trend_img = gr.Image(label="감정 점수 추이")
+
+    analyze_btn.click(fn=analyze_diary, inputs=diary_input, outputs=analyze_output)
+    dist_btn.click(fn=show_distribution, outputs=dist_img)
+    trend_btn.click(fn=show_trend, outputs=trend_img)
+
 demo.launch(share=True)
