@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 import gradio as gr
+from sentence_transformers import SentenceTransformer
+import numpy as np
+import faiss
 
 ## 현재 파일 위치 기준으로 한 단계 위 폴더에 있는 data/sample_diary.json 경로를 만드는 코드(기본경로 설정)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -207,12 +210,41 @@ def show_trend():
         return None
     return plot_emotion_trend()  # 이미지 경로 반환
 
+## 임베딩 모델 로드
+embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+
+## 임베딩 생성 함수
+def get_embedding(text):
+    return embedder.encode(text, convert_to_numpy=True)
+
+## FAISS 인덱스 구축
+def build_faiss_index(texts):
+    embeddings = [get_embedding(t) for t in texts]
+    dim = embeddings[0].shape[0]
+    index = faiss.IndexFlatL2(dim)
+    index.add(np.array(embeddings))
+    return index
+
+def find_similar(text, index, texts, top_k = 3):
+    query_vec = get_embedding(text).reshape(1, -1)
+    distances, indices = index.search(query_vec, top_k)
+    return [texts[i] for i in indices[0]]
+
+def search_similar_diary(text):
+    df = load_and_prepare_data()
+    if df.empty:
+        return "일기가 없습니다."
+    texts = df["text"].tolist()
+    index = build_faiss_index(texts)
+    similar_texts = find_similar(text, index, texts)
+    return "\n\n".join(similar_texts)
 
 
 with gr.Blocks() as demo:
     gr.Markdown("# 감정일기 분석 및 시각화")
 
     diary_input = gr.Textbox(label="오늘의 일기")
+    
     analyze_btn = gr.Button("일기 분석 및 저장")
     analyze_output = gr.Textbox(label="분석 결과")
 
@@ -222,8 +254,15 @@ with gr.Blocks() as demo:
     trend_btn = gr.Button("감정 점수 추이 그래프 보기")
     trend_img = gr.Image(label="감정 점수 추이")
 
+    # 유사일기 검색 버튼과 출력 추가
+    similar_btn = gr.Button("유사한 과거 일기 찾기")
+    similar_output = gr.Textbox(label="유사한 일기들")
+
+    # 버튼과 함수 연결
     analyze_btn.click(fn=analyze_diary, inputs=diary_input, outputs=analyze_output)
     dist_btn.click(fn=show_distribution, outputs=dist_img)
     trend_btn.click(fn=show_trend, outputs=trend_img)
+    similar_btn.click(fn=search_similar_diary, inputs=diary_input, outputs=similar_output)
+
 
 demo.launch(share=True)
