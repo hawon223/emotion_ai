@@ -198,6 +198,42 @@ def plot_emotion_trend():
     plt.close()
     return "감정 점수 변화 그래프 저장 완료"
 
+## 주간 감정 통계 계산
+def weekly_emotion_stats():
+    df = load_and_prepare_data()
+    if df.empty:
+        return "데이터가 없습니다."
+    df["week"] = df["date"].dt.strftime("%Y-%U")
+
+    ## 주차 칼럼 추가
+    weekly_counts = (
+        df.groupby(["week", "label"])
+        .size()
+        .reset_index(name = "count")
+    )
+    
+    ## 주간 최다 감정
+    weekly_top_emotion = (
+        weekly_counts.sort_values(["week", "count"], ascending=[True, False])
+        .groupby("week")
+        .first()
+        .reset_index()
+        .rename(columns={"label":"top_emotion"})
+    )
+    
+    ## 주간 평균 점수
+    weekly_avg_score = (
+        df.groupby("week")["score"]
+        .mean()
+        .reset_index()
+        .rename(columns={"score": "avg_score"})
+    )
+    
+    weekly_stats = pd.merge(weekly_top_emotion, weekly_avg_score, on = "week")
+    
+    print(weekly_stats)
+    return weekly_stats
+
 demo = gr.Interface(
     fn=analyze_diary,
     inputs="text",
