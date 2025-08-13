@@ -11,21 +11,20 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 import faiss
 
-## 현재 파일 위치 기준으로 한 단계 위 폴더에 있는 data/sample_diary.json 경로를 만드는 코드(기본경로 설정)
+# 기본 경로 설정
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 csv_path = os.path.join(BASE_DIR, "data", "sample.csv")
 
     
-## openai api
+# OPENAI API
 load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     
     
-## pipeline으로 모델 불러오기
+# Hugging Face pipeline 모델 불러오기 (감정분석용)
 pipe = pipeline("text-classification", model="hun3359/klue-bert-base-sentiment")
 
-## 점수 
+# 감정 점수 정의
 emotion_scores = {
     "분노": 0,          # 가장 부정적
     "툴툴대는": 5,
@@ -90,7 +89,7 @@ emotion_scores = {
     "자신하는": 100      # 가장 긍정적
 }
 
-## CSV 로드 + 날짜 변환 + 정렬 함수
+# CSV 로드 + 날짜 변환 + 정렬 함수
 def load_and_prepare_data():
     if os.path.exists(csv_path) and os.stat(csv_path).st_size > 0:
         df = pd.read_csv(csv_path, encoding="utf-8")
@@ -100,13 +99,14 @@ def load_and_prepare_data():
         return df
     return pd.DataFrame()
 
+# 일기 분석 함수
 def analyze_diary(text):
     ## 감정분석
     result = pipe(text)[0]
     label = result['label'].strip()
     score = emotion_scores.get(label, 50)
 
-    ## 요약 프롬프트
+    ## 요약 생성 (GPT API 호출)
     summary_prompt = f"다음 일기를 한 문장으로 요약해줘: \n{text}"
 
     ## GPT 호출
@@ -116,7 +116,7 @@ def analyze_diary(text):
     ).choices[0].message.content.strip()
 
 
-    ## 공감 프롬프트
+    ## 공감 생성 (GPT API 호출)
     empathy_prompt = f"사용자의 하루: {text}\n너는 따뜻하게 공감해주는 AI 친구야. 한 문장으로 공감해줘."
 
     ## GPT 호출
@@ -125,7 +125,7 @@ def analyze_diary(text):
         messages = [{"role":"user","content":empathy_prompt}]
     ).choices[0].message.content.strip()
 
-    ## 저장
+    ## csv에 저장
     new_entry = {
         "date": pd.Timestamp.now().strftime("%Y-%m-%d"),
         "text": text,
@@ -154,6 +154,8 @@ def analyze_diary(text):
     
     return f"감정: {label}\n점수: {score}\n요약: {summary}\n공감: {empathy}\n(저장 완료)"
 
+
+# 감정 분포 그래프
 def plot_emotion_distribution():
     df = load_and_prepare_data()
     if df.empty:
@@ -175,6 +177,7 @@ def plot_emotion_distribution():
 
     return img_path  # 이미지 파일 경로 반환
 
+# 감정 점수 추정 그래프
 def plot_emotion_trend():
     df = load_and_prepare_data()
     if df.empty:
@@ -198,6 +201,8 @@ def plot_emotion_trend():
 
     return img_path  # 이미지 파일 경로 반환
 
+
+# Gradio 출력용 함수
 def show_distribution():
     df = load_and_prepare_data()
     if df.empty:
@@ -210,7 +215,7 @@ def show_trend():
         return None
     return plot_emotion_trend()  # 이미지 경로 반환
 
-## 임베딩 모델 로드
+# 임베딩 모델 로드
 embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 ## 임베딩 생성 함수
@@ -221,7 +226,7 @@ def get_embedding(text):
 def build_faiss_index(texts):
     embeddings = [get_embedding(t) for t in texts]
     dim = embeddings[0].shape[0]
-    index = faiss.IndexFlatL2(dim)
+    index = faiss.IndexIVFFlat(dim)
     index.add(np.array(embeddings))
     return index
 
@@ -239,7 +244,7 @@ def search_similar_diary(text):
     similar_texts = find_similar(text, index, texts)
     return "\n\n".join(similar_texts)
 
-
+# Gradio UI 구성
 with gr.Blocks() as demo:
     gr.Markdown("# 감정일기 분석 및 시각화")
 
