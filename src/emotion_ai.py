@@ -6,7 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
-import gradio as gr
+import streamlit as st
 from sentence_transformers import SentenceTransformer
 import numpy as np
 import faiss
@@ -152,7 +152,7 @@ def analyze_diary(text):
     plot_emotion_distribution()
     plot_emotion_trend()
     
-    return f"감정: {label}\n점수: {score}\n요약: {summary}\n공감: {empathy}\n(저장 완료)"
+    return f"감정: {label}\n점수: {score}\n요약: {summary}\n공감: {empathy}"
 
 
 # 감정 분포 그래프
@@ -165,19 +165,15 @@ def plot_emotion_distribution():
     font_name = font_manager.FontProperties(fname=font_path).get_name()
     rc('font', family=font_name)
 
-    plt.figure(figsize=(10, 5))
-    df["label"].value_counts().plot(kind="bar")
-    plt.title("감정 분포")
-    plt.xlabel("감정")
-    plt.ylabel("빈도")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    df["label"].value_counts().plot(kind="bar", ax=ax)
+    ax.set_title("감정 분포")
+    ax.set_xlabel("감정")
+    ax.set_ylabel("빈도")
     plt.tight_layout()
-    img_path = os.path.join(BASE_DIR, "data", "emotion_distribution.png")
-    plt.savefig(img_path)
-    plt.close()
+    
+    return fig  # Figure 객체 반환
 
-    return img_path  # 이미지 파일 경로 반환
-
-# 감정 점수 추정 그래프
 def plot_emotion_trend():
     df = load_and_prepare_data()
     if df.empty:
@@ -187,33 +183,17 @@ def plot_emotion_trend():
     font_name = font_manager.FontProperties(fname=font_path).get_name()
     rc('font', family=font_name)
 
-    plt.figure(figsize=(10, 5))
-    plt.plot(df["date"], df["score"], marker='o')
-    plt.title("감정 점수 변화")
-    plt.xlabel("날짜")
-    plt.ylabel("감정 점수(0=부정, 100=긍정)")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df["date"], df["score"], marker='o')
+    ax.set_title("감정 점수 변화")
+    ax.set_xlabel("날짜")
+    ax.set_ylabel("감정 점수(0=부정, 100=긍정)")
     plt.xticks(rotation=45)
-    plt.grid(True)
+    ax.grid(True)
     plt.tight_layout()
-    img_path = os.path.join(BASE_DIR, "data", "emotion_trend.png")
-    plt.savefig(img_path)
-    plt.close()
+    
+    return fig  # Figure 객체 반환
 
-    return img_path  # 이미지 파일 경로 반환
-
-
-# Gradio 출력용 함수
-def show_distribution():
-    df = load_and_prepare_data()
-    if df.empty:
-        return None
-    return plot_emotion_distribution()  # 이미지 경로 반환
-
-def show_trend():
-    df = load_and_prepare_data()
-    if df.empty:
-        return None
-    return plot_emotion_trend()  # 이미지 경로 반환
 
 # 임베딩 모델 로드
 embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
@@ -244,30 +224,40 @@ def search_similar_diary(text):
     similar_texts = find_similar(text, index, texts)
     return "\n\n".join(similar_texts)
 
-# Gradio UI 구성
-with gr.Blocks() as demo:
-    gr.Markdown("# 감정일기 분석 및 시각화")
+st.title("📓 감정일기 분석 및 시각화")
 
-    diary_input = gr.Textbox(label="오늘의 일기")
-    
-    analyze_btn = gr.Button("일기 분석 및 저장")
-    analyze_output = gr.Textbox(label="분석 결과")
+# 입력
+diary_input = st.text_area("오늘의 일기를 입력하세요:")
 
-    dist_btn = gr.Button("감정 분포 그래프 보기")
-    dist_img = gr.Image(label="감정 분포")
+# 분석
+if st.button("일기 분석 및 저장"):
+    if diary_input.strip():
+        result = analyze_diary(diary_input)
+        st.success(result)
+    else:
+        st.warning("일기를 입력하세요.")
 
-    trend_btn = gr.Button("감정 점수 추이 그래프 보기")
-    trend_img = gr.Image(label="감정 점수 추이")
+# 감정 분포
+if st.button("감정 분포 그래프 보기"):
+    fig = plot_emotion_distribution()
+    if fig is not None:
+        st.pyplot(fig)
+    else:
+        st.warning("데이터가 없습니다.")
 
-    # 유사일기 검색 버튼과 출력 추가
-    similar_btn = gr.Button("유사한 과거 일기 찾기")
-    similar_output = gr.Textbox(label="유사한 일기들")
-
-    # 버튼과 함수 연결
-    analyze_btn.click(fn=analyze_diary, inputs=diary_input, outputs=analyze_output)
-    dist_btn.click(fn=show_distribution, outputs=dist_img)
-    trend_btn.click(fn=show_trend, outputs=trend_img)
-    similar_btn.click(fn=search_similar_diary, inputs=diary_input, outputs=similar_output)
+# 감정 추이
+if st.button("감정 점수 추이 그래프 보기"):
+    fig = plot_emotion_trend()
+    if fig is not None:
+        st.pyplot(fig)
+    else:
+        st.warning("데이터가 없습니다.")
 
 
-demo.launch(share=True)
+# 유사 일기 검색
+if st.button("유사한 과거 일기 찾기"):
+    if diary_input.strip():
+        similar = search_similar_diary(diary_input)
+        st.info(similar)
+    else:
+        st.warning("일기를 입력하세요.")
