@@ -160,8 +160,7 @@ def plot_emotion_distribution():
     df = load_and_prepare_data()
     if df.empty:
         return None
-    
-    font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
+    font_path = os.path.join(BASE_DIR, "fonts", "malgun.ttf")
     font_name = font_manager.FontProperties(fname=font_path).get_name()
     rc('font', family=font_name)
 
@@ -179,7 +178,7 @@ def plot_emotion_trend():
     if df.empty:
         return None
     
-    font_path = r"C:\Users\user\Downloads\malgun-gothic\malgun.ttf"
+    font_path = os.path.join(BASE_DIR, "fonts", "malgun.ttf")
     font_name = font_manager.FontProperties(fname=font_path).get_name()
     rc('font', family=font_name)
 
