@@ -1,0 +1,13 @@
+pandas==2.1.0
+numpy==1.26.0
+matplotlib==3.8.0
+
+transformers==4.42.0
+sentence-transformers==2.2.2
+
+openai==1.29.0
+python-dotenv==1.0.1
+
+gradio==3.52.0
+
+faiss-cpu==1.7.4

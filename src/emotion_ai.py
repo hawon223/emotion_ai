@@ -226,7 +226,7 @@ def get_embedding(text):
 def build_faiss_index(texts):
     embeddings = [get_embedding(t) for t in texts]
     dim = embeddings[0].shape[0]
-    index = faiss.IndexIVFFlat(dim)
+    index = faiss.IndexFlatL2(dim)
     index.add(np.array(embeddings))
     return index
 
