@@ -17,7 +17,7 @@
 
 - **NLP 모델:** Hugging Face `klue-bert-base-sentiment`
 - **임베딩 & 검색:** Sentence Transformers + FAISS
-- **UI:** Gradio
+- **UI:** Streamlit
 - **데이터 처리:** Pandas
 - **시각화:** Matplotlib
 - **API:** OpenAI GPT
