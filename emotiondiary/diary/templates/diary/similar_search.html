@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>유사 일기 검색</h2>
+<form method="post">{% csrf_token %}
+    <textarea name="text" rows="5" cols="50" placeholder="검색할 일기를 입력하세요"></textarea><br>
+    <button class="btn btn-primary" type="submit">검색</button>
+</form>
+
+{% if similar_texts %}
+<hr>
+<h3>유사한 일기</h3>
+<ul class="list-group">
+    {% for t in similar_texts %}
+        <li class="list-group-item">{{ t }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

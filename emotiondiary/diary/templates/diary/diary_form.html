@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>일기 작성 페이지</h2>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-success" type="submit">저장</button>
+</form>
+
+{% if result %}
+<hr>
+<h3>분석 결과</h3>
+<p><strong>감정:</strong> {{ result.label }}</p>
+<p><strong>점수:</strong> {{ result.score }}</p>
+<p><strong>요약:</strong> {{ result.summary }}</p>
+<p><strong>공감:</strong> {{ result.empathy }}</p>
+{% endif %}
+{% endblock %}

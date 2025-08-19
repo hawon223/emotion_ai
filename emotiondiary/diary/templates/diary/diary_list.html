@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>나의 일기 목록</h2>
+<ul class="list-group">
+{% for diary in diaries %}
+    <li class="list-group-item">
+        <strong>{{ diary.date|date:"Y-m-d H:i" }}</strong><br>
+        {{ diary.text }}<br>
+        감정: {{ diary.label }} ({{ diary.score }})
+    </li>
+{% endfor %}
+</ul>
+
+<hr>
+<h3>감정 분포 그래프</h3>
+<img src="{% url 'emotion_graph' %}" alt="감정 분포 그래프" class="img-fluid">
+{% endblock %}
