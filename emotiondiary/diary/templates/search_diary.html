@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load highlight %}
+
+{% block content %}
+<h2>유사 일기 검색</h2>
+
+<form method="get" action="{% url 'search_diary' %}">
+    <input type="text" name="q" value="{{ query }}" placeholder="검색어를 입력하세요">
+    <button type="submit">검색</button>
+</form>
+
+{% if diaries %}
+    <hr>
+    <h3>검색 결과</h3>
+    <ul>
+        {% for diary in diaries %}
+            <li>
+                <strong>{{ diary.title|highlight:query }}</strong><br>
+                {{ diary.text|truncatechars:100|highlight:query }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    {% if query %}
+        <p>검색 결과가 없습니다.</p>
+    {% endif %}
+{% endif %}
+
+{% if similar_texts %}
+    <hr>
+    <h3>유사한 일기</h3>
+    <ul class="list-group">
+        {% for t in similar_texts %}
+            <li class="list-group-item">{{ t|truncatechars:100 }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

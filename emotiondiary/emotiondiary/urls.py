@@ -14,6 +14,14 @@ urlpatterns = [
     path("diary/list/", views.diary_list, name="diary_list"),
     path("diary/graph/", views.emotion_distribution, name="emotion_graph"),
     path("diary/search/", views.search_diary, name="search_diary"),
+    path("diary/edit/<int:diary_id>/", views.diary_edit, name="diary_edit"),
+    path("diary/delete/<int:diary_id>/", views.diary_delete_confirm, name="diary_delete_confirm"),
+    path("diary/delete/<int:diary_id>/confirm/", views.diary_delete, name="diary_delete"),
+
+
+
+
+
 
     # 회원가입
     path("signup/", views.signup, name="signup"),

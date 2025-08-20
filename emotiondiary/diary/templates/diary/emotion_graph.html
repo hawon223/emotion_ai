@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>감정 분포 그래프</h2>
+<img src="{{ graph }}" alt="감정 분포 그래프" style="max-width:100%; height:auto;">
+<a href="{% url 'diary_list' %}">뒤로가기</a>
+{% endblock %}

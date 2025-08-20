@@ -1,22 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>일기 작성</h2>
+<h2>일기 수정</h2>
 <form method="post">
     {% csrf_token %}
     <div>
         <label for="title">제목:</label><br>
-        <input type="text" id="title" name="title" required>
+        <input type="text" id="title" name="title" value="{{ diary.title }}" required>
     </div>
     <div>
         <label for="text">내용:</label><br>
-        <textarea id="text" name="text" rows="10" cols="50" required></textarea>
+        <textarea id="text" name="text" rows="10" cols="50" required>{{ diary.text }}</textarea>
     </div>
-    <button type="submit">작성 완료</button>
+    <button type="submit">수정 완료</button>
 </form>
-
 <a href="{% url 'diary_list' %}">뒤로가기</a>
-
-
-
 {% endblock %}

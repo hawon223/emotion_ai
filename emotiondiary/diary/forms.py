@@ -1,18 +1,16 @@
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-from .models import Diary
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import DiaryForm
 
-# 회원가입 폼
-class SignUpForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-
-    class Meta:
-        model = User
-        fields = ("username", "email", "password1", "password2")
-
-# 일기 작성 폼
-class DiaryForm(forms.ModelForm):
-    class Meta:
-        model = Diary
-        fields = ("text",)  # Diary 모델에서 작성할 필드만 넣기
+@login_required
+def diary_create(request):
+    if request.method == "POST":
+        form = DiaryForm(request.POST)
+        if form.is_valid():
+            diary = form.save(commit=False)
+            diary.user = request.user  # 작성자 연결
+            diary.save()
+            return redirect("diary:list")  # 일기 목록 페이지로 이동
+    else:
+        form = DiaryForm()
+    return render(request, "diary/create.html", {"form": form})
