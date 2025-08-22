@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from diary import views
-from django.contrib.auth import views as auth_views 
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -15,12 +15,7 @@ urlpatterns = [
     path("diary/graph/", views.emotion_distribution, name="emotion_graph"),
     path("diary/search/", views.search_diary, name="search_diary"),
     path("diary/edit/<int:diary_id>/", views.diary_edit, name="diary_edit"),
-    path("diary/delete/<int:diary_id>/", views.diary_delete_confirm, name="diary_delete_confirm"),
-    path("diary/delete/<int:diary_id>/confirm/", views.diary_delete, name="diary_delete"),
-
-
-
-
+    path('delete/<int:pk>/', views.diary_delete, name='diary_delete'),
 
 
     # 회원가입
@@ -28,5 +23,6 @@ urlpatterns = [
 
     # Django 기본 인증 URL 사용 (로그인, 로그아웃, 비밀번호 변경 등)
     path("accounts/", include("django.contrib.auth.urls")),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('delete/', views.delete_account, name='delete_account'),  # 계정 삭제
 ]

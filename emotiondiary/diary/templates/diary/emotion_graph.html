@@ -1,7 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>감정 분포 그래프</h2>
-<img src="{{ graph }}" alt="감정 분포 그래프" style="max-width:100%; height:auto;">
-<a href="{% url 'diary_list' %}">뒤로가기</a>
+<body style="background-color: #121212; color: #f5f5f5; font-family: Arial, sans-serif; margin: 0; padding: 0;">
+
+  <!-- Header -->
+  <header style="background-color: #1f1f1f; padding: 1.5rem; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+    <h1 style="margin: 0; color: #ffffff; font-weight: bold;">감정 분포</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main style="padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 2rem;">
+    
+    <div style="background-color: #1f1f1f; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); width: 90%; max-width: 800px; text-align: center;">
+      <h2 style="color: #ffffff; margin-bottom: 1rem;">감정 분포 그래프</h2>
+      <img src="{{ graph }}" alt="감정 분포 그래프" style="max-width:100%; height:auto; border-radius: 8px; border: 1px solid #333;">
+    </div>
+
+    <button onclick="window.location.href='{% url 'diary_list' %}'" 
+            style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #ffffff, #ffffff); color: #121212; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;">
+      뒤로가기
+    </button>
+
+  </main>
+
+</body>
 {% endblock %}

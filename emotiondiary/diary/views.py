@@ -18,6 +18,8 @@ from transformers import pipeline
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from django.contrib.auth.views import LogoutView
+from django.contrib import messages
 
 # 환경변수 로드 및 OpenAI 클라이언트 생성
 load_dotenv()
@@ -33,6 +35,7 @@ def home(request):
     return render(request, "diary/home.html")
 
 def diary_list(request):
+    diaries = Diary.objects.filter(user=request.user).order_by('-date')
     return render(request, "diary/diary_list.html")
 
 
@@ -47,6 +50,17 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, "signup.html", {"form": form})
+
+
+# 계정 삭제
+@login_required
+def delete_account(request):
+    if request.method == "POST":
+        user = request.user
+        user.delete()
+        messages.success(request, "계정이 삭제되었습니다.")
+        return redirect("home")  # 홈으로 이동
+    return render(request, "diary/delete_account.html")
 
 
 # Hugging Face 감정 분석 모델
@@ -133,31 +147,24 @@ def diary_list(request):
         diaries = Diary.objects.filter(user=request.user).order_by('-date')
     return render(request, "diary/diary_list.html", {"diaries": diaries})
 
+@login_required
+def diary_delete(request, pk):
+    diary = get_object_or_404(Diary, pk=pk, user=request.user)  # user 필터링 추가
+    diary.delete()
+    return redirect('diary_list')
 
 @login_required
 def diary_edit(request, diary_id):
-    diary = get_object_or_404(Diary, pk=diary_id)
-
+    diary = get_object_or_404(Diary, pk=diary_id, user=request.user)  # user 필터링 추가
+    
     if request.method == "POST":
         diary.title = request.POST.get("title")
-        diary.text = request.POST.get("text")# text 필드에 저장
+        diary.text = request.POST.get("text")
         diary.save()
-        return redirect("diary_list")  # 상세페이지 대신 목록으로 이동
+        return redirect("diary_list")
 
     return render(request, "diary/diary_edit.html", {"diary": diary})
 
-@login_required
-def diary_delete_confirm(request, diary_id):
-    diary = get_object_or_404(Diary, id=diary_id, user=request.user)
-    return render(request, "diary/diary_delete_confirm.html", {"diary": diary})
-
-@login_required
-def diary_delete(request, diary_id):
-    diary = get_object_or_404(Diary, id=diary_id, user=request.user)
-    if request.method == "POST":   # 확인 눌렀을 때만 삭제
-        diary.delete()
-        return redirect("diary_list")
-    return redirect("diary_delete_confirm", diary_id=diary.id)
 
 
 @login_required
@@ -186,20 +193,20 @@ def emotion_distribution(request):
     return render(request, "diary/emotion_graph.html", {"graph": uri})
 
 # 일기 검색 (제목 + 내용)
+@login_required
 def search_diary(request):
     query = request.GET.get('q', '')
     diaries = Diary.objects.filter(text__icontains=query) if query else []
 
     similar_texts = []
     if diaries:
-        # 모든 일기 텍스트 가져오기
         all_texts = [diary.text for diary in Diary.objects.all()]
 
         if all_texts:
             vectorizer = TfidfVectorizer()
             vectors = vectorizer.fit_transform(all_texts + [query])
             cosine_sim = cosine_similarity(vectors[-1], vectors[:-1]).flatten()
-            top_indices = np.argsort(cosine_sim)[::-1][:5]  # 상위 5개 유사 일기
+            top_indices = np.argsort(cosine_sim)[::-1][:5]
             similar_texts = [all_texts[i] for i in top_indices if cosine_sim[i] > 0]
 
     context = {
@@ -208,5 +215,7 @@ def search_diary(request):
         'similar_texts': similar_texts,
     }
     return render(request, 'search_diary.html', context)
+
+
 
 
