@@ -6,10 +6,8 @@ from .models import Diary  # 일기 모델
 import matplotlib.pyplot as plt
 import io
 import urllib, base64
-from .models import Diary
 import matplotlib
 matplotlib.use('Agg')  # 서버에서 GUI 없이 이미지 생성
-import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -18,6 +16,8 @@ from transformers import pipeline
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from functools import lru_cache
+
 
 # 환경변수 로드 및 OpenAI 클라이언트 생성
 load_dotenv()
@@ -210,3 +210,7 @@ def search_diary(request):
     return render(request, 'search_diary.html', context)
 
 
+@lru_cache(maxsize=1)
+def get_pipeline():
+    from transformers import pipeline
+    return pipeline("text-classification", model="hun3359/klue-bert-base-sentiment")
